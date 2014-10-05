@@ -204,6 +204,7 @@ defmodule Socket.Web do
   `:path` sets the path to give the server, `/` by default
   `:origin` sets the Origin header, this is optional
   `:key` is the key used for the handshake, this is optional
+  `:headers` allows arbitrary additional headers to be added, this is optional
 
   You can also pass TCP or SSL options, depending if you're using secure
   websockets or not.
@@ -221,6 +222,7 @@ defmodule Socket.Web do
     protocols  = options[:protocol]
     extensions = options[:extensions]
     key        = :base64.encode(options[:key] || "fork the dongles")
+    opt_headers = Enum.flat_map options[:headers], fn {k,v} -> ["#{String.capitalize(to_string k)}: #{v}", "\r\n"] end
 
     client = mod.connect!(address, port)
     client |> Socket.packet!(:raw)
@@ -234,6 +236,7 @@ defmodule Socket.Web do
       if(protocols, do: ["Sec-WebSocket-Protocol: #{Enum.join protocols, ", "}", "\r\n"], else: []),
       if(extensions, do: ["Sec-WebSocket-Extensions: #{Enum.join extensions, ", "}", "\r\n"], else: []),
       "Sec-WebSocket-Version: 13", "\r\n",
+      opt_headers,
       "\r\n"]
 
     client |> Socket.packet(:http_bin)
